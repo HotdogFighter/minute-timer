@@ -35,12 +35,12 @@ int led_pins_state[] = { 0, 0, 0, 0, 0, 0 };
 int led_pins_state_count = 6;
 
 //led brightness goes from 0 to 255
-int led_max_brightness = 40;
+int led_max_brightness = 20;
 int led_brightness_increment = 5;
-int led_blink_delay_millis = 200;  //blink delay in milliseconds //debug using 200, supposed to be 800
+int led_blink_delay_millis = 2000;  //blink delay in milliseconds //debug using 200, supposed to be 800
 
 //how long to blink for (in seconds)
-int timer_length_seconds = 3;  //debug using 4, supposed to be 50
+unsigned long timer_length_seconds = 50;  //debug using 4, supposed to be 50
 
 //keyboard buttons that control the arduino
 char keyboard_buttons_to_start_timer[] = { 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ' ' };
@@ -53,7 +53,7 @@ const int IRQpin = 2;
 PS2Keyboard keyboard;
 
 void setup() {
-  // set the dimmable LED's as output:
+  // make pins into dimmable LED's:
   for (int this_pin = 0; this_pin < 6; this_pin++) {
     pinMode(led_pins[this_pin], OUTPUT);
   }
@@ -66,8 +66,6 @@ void setup() {
 
 void loop() {
 
-  // led_pins_state[]
-
   if (keyboard.available()) {
     // read the next key
     char c = keyboard.read();
@@ -77,9 +75,6 @@ void loop() {
     for (int current_button_index = 0; current_button_index < keyboard_buttons_to_start_timer_count; current_button_index++) {
       char stompable = keyboard_buttons_to_start_timer[current_button_index];
       if (c == stompable) {
-        keyboard.clear(); //good spot to have this
-        Serial.println("about to print keyboard contents 1:");
-        Serial.println(keyboard.read());
         //choose the first turned-off led and start blinking it
         for (int current_pin_index = 0; current_pin_index < led_pins_state_count; current_pin_index++) {
           if (led_pins_state[current_pin_index] == 0) {  //if pin is currently off:
@@ -96,19 +91,12 @@ void loop() {
               analogWrite(led_pins[5], led_max_brightness);
             }
 
-            Serial.println("about to print keyboard contents 2:");
-            Serial.println(keyboard.read());
-            Serial.println("out of break 1");
-            keyboard.clear();  //unnecessary???
             break;
           }
-          keyboard.clear();  //unnecessary???
+  
         }
-        keyboard.clear();  //unnecessary???
-        Serial.println("out of break 2");
         break;
       }
-      keyboard.clear();  //unnecessary???
     }
 
     //turn all led off if keyboard reset button is pressed
@@ -119,10 +107,9 @@ void loop() {
       }
     }
 
-    keyboard.clear();
-    Serial.println("about to print keyboard contents 3:");
-    Serial.println(keyboard.read()); //good spot to have this
+    clear_keyboard_buffer();
   }
+
 }
 
 void blink_for_x_seconds(int led_pin, unsigned long seconds)  //end with the led on, not off
@@ -163,4 +150,13 @@ void play_buzzer() {
     noTone(8);
   }
   return 0;
+}
+
+void clear_keyboard_buffer(){
+  int clear_counter = 0;
+  while (keyboard.available()) {
+    keyboard.clear();
+    Serial.println(clear_counter);
+    clear_counter = clear_counter++;
+  }
 }
