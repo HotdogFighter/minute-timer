@@ -1,4 +1,4 @@
-# minute-timer
+# minute_timer
 
 Timer using Arduino Pro Mini.
 
