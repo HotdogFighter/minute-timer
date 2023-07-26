@@ -125,9 +125,9 @@ void blink_pin_for_x_seconds(int led_pin, unsigned long seconds)  //end with the
 
   Serial.println("start blinking");
   while (millis() <= end_millis) {
-    analogWrite(led_pin, LOW);
-    delay(led_blink_delay_millis);
     analogWrite(led_pin, led_max_brightness);
+    delay(led_blink_delay_millis);
+    analogWrite(led_pin, LOW);
     delay(led_blink_delay_millis);
     // Serial.println("end blink round");
     Serial.print("millis: ");
@@ -137,6 +137,7 @@ void blink_pin_for_x_seconds(int led_pin, unsigned long seconds)  //end with the
     Serial.println(end_millis);
   }
   Serial.println("end blink");
+  analogWrite(led_pin, led_max_brightness);
   return 0;
 }
 
