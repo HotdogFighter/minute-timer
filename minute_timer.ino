@@ -37,10 +37,14 @@ int led_pins_state_count = 6;
 //led brightness goes from 0 to 255
 int led_max_brightness = 20;
 int led_brightness_increment = 5;
-int led_blink_delay_millis = 2000;  //blink delay in milliseconds //debug using 200, supposed to be 800
+int led_blink_delay_millis = 800;  //blink delay in milliseconds //debug using 200, supposed to be 800
 
 //how long to blink for (in seconds)
 unsigned long timer_length_seconds = 50;  //debug using 4, supposed to be 50
+
+//how quickly to flash the led's when a pomodoro is finished
+int flash_delay_millis = 300;
+int between_flash_delay_millis = 800;
 
 //keyboard buttons that control the arduino
 char keyboard_buttons_to_start_timer[] = { 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ' ' };
@@ -78,18 +82,20 @@ void loop() {
         //choose the first turned-off led and start blinking it
         for (int current_pin_index = 0; current_pin_index < led_pins_state_count; current_pin_index++) {
           if (led_pins_state[current_pin_index] == 0) {  //if pin is currently off:
-            int currently_off_pin_index = led_pins[current_pin_index];
+            int currently_off_pin = led_pins[current_pin_index];
 
-            blink_for_x_seconds(currently_off_pin_index, timer_length_seconds);
+            blink_pin_for_x_seconds(currently_off_pin, timer_length_seconds);
             led_pins_state[current_pin_index] = 1;
             play_buzzer();
 
-            if (current_pin_index>=0){ // tone() function uses Timer2 so it messes with pin3 and pin11
-              analogWrite(led_pins[0], led_max_brightness);
-            }
-            if (current_pin_index>=5){ // tone() function uses Timer2 so it messes with pin3 and pin11
-              analogWrite(led_pins[5], led_max_brightness);
-            }
+            // if (current_pin_index>=0){ // tone() function uses Timer2 so it messes with pin3 and pin11
+            //   analogWrite(led_pins[0], led_max_brightness);
+            // }
+            // if (current_pin_index>=5){ // tone() function uses Timer2 so it messes with pin3 and pin11
+            //   analogWrite(led_pins[5], led_max_brightness);
+            // }
+
+            flash_all_active_led(current_pin_index);
 
             break;
           }
@@ -112,7 +118,7 @@ void loop() {
 
 }
 
-void blink_for_x_seconds(int led_pin, unsigned long seconds)  //end with the led on, not off
+void blink_pin_for_x_seconds(int led_pin, unsigned long seconds)  //end with the led on, not off
 {
   unsigned long current_millis = millis();
   unsigned long end_millis = current_millis + (seconds * 1000);
@@ -149,6 +155,28 @@ void play_buzzer() {
     // stop the tone playing:
     noTone(8);
   }
+  return 0;
+}
+
+void flash_all_active_led(int current_pin_index) {
+  //burst of three blinks performed twice. does it for all led's leading up to led_pin
+  int how_many_sets_to_flash = 2;
+  int how_many_reps_to_flash = 3;
+
+  for (int i = 0; i < how_many_sets_to_flash; i++) {
+    for (int i = 0; i < how_many_reps_to_flash; i++) {
+      for (int i = 0; i <= current_pin_index; i++) {
+        analogWrite(led_pins[i], LOW);
+      }
+      delay(flash_delay_millis);
+      for (int i = 0; i <= current_pin_index; i++) {
+        analogWrite(led_pins[i], led_max_brightness);
+      }
+      delay(flash_delay_millis);
+    }
+    delay(between_flash_delay_millis);
+  }
+
   return 0;
 }
 
